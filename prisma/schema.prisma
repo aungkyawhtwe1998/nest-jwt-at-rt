@@ -10,13 +10,52 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User{
-  id Int @id @default(autoincrement())
+model User {
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
-  email String @unique
-  hash String
-  hashedRt String?
-  
+  email     String   @unique
+  username  String   @default("")
+  hash      String
+  hashedRt  String?
+  todos     Todo[]
+  company   Company?
+
   @@map("users")
+}
+
+model Company {
+  id                Int      @id @default(autoincrement())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now())
+  name              String   @default("Default")
+  address           String   @default("Default")
+  imageUrl          String   @default("")
+  serviceChargeRate Int      @default(0)
+  taxRate           Int      @default(0)
+  currency          String   @default("฿")
+  coverPhoto        String   @default("")
+  userId            Int      @unique
+  user              User     @relation(fields: [userId], references: [id])
+
+  @@map("companies")
+}
+
+model Todo {
+  id          Int        @id @default(autoincrement())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  title       String     @unique
+  description String?
+  status      TodoStatus @default(OPEN)
+  userId      Int
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("todos")
+}
+
+enum TodoStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
 }

@@ -18,19 +18,40 @@ export class AuthService {
     const newUser = await this.prisma.user.create({
       data: {
         email: dto.email,
+        username: dto.username,
         hash,
       },
     });
+    let newCompany;
+    if (newUser) {
+      newCompany = await this.prisma.company.create({
+        data: {
+          userId: newUser.id,
+        },
+      });
+    }
 
-    const tokens = await this.getTokens(newUser.id, newUser.email);
-    await this.updateRtHash(newUser.id, tokens.refresh_token);
-    return tokens;
+    if (newCompany) {
+      const userData = {
+        email: newUser.email,
+        username: newUser.username,
+        id: newUser.id,
+        company: newCompany,
+      };
+      const tokens = await this.getTokens(newUser.id, newUser.email);
+      await this.updateRtHash(newUser.id, tokens.refresh_token);
+      return Object.assign({}, tokens, { user: userData });
+    }
   }
 
-  async signinLocal(dto: AuthDto): Promise<Tokens> {
+  async signinLocal(dto: AuthDto): Promise<any> {
+    console.log('signin', dto)
     const user = await this.prisma.user.findUnique({
       where: {
         email: dto.email,
+      },
+      include: {
+        company: true,
       },
     });
 
@@ -41,10 +62,17 @@ export class AuthService {
 
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRtHash(user.id, tokens.refresh_token);
-    return tokens;
+    const userData = {
+      email: user.email,
+      username: user.username,
+      id: user.id,
+      company: user.company,
+    };
+    const resObj = Object.assign({}, tokens, { user: userData });
+    return resObj;
   }
 
-  async logout(userId: number):Promise<boolean> {
+  async logout(userId: number): Promise<boolean> {
     await this.prisma.user.updateMany({
       where: {
         id: userId,
