@@ -15,37 +15,52 @@ export class AuthService {
 
   async signupLocal(dto: AuthDto): Promise<Tokens> {
     const hash = await this.hashData(dto.password);
-    const newUser = await this.prisma.user.create({
-      data: {
-        email: dto.email,
-        username: dto.username,
-        hash,
-      },
-    });
-    let newCompany;
-    if (newUser) {
-      newCompany = await this.prisma.company.create({
+    try {
+      const newUser = await this.prisma.user.create({
         data: {
-          userId: newUser.id,
+          email: dto.email,
+          username: dto.username,
+          hash,
         },
       });
-    }
+      if (newUser) {
+        const tokens = await this.getTokens(newUser.id, newUser.email);
+        await this.updateRtHash(newUser.id, tokens.refresh_token);
+        const newCompany = await this.prisma.company.create({
+          data: {
+            userId: newUser.id,
+          },
+        });
+        if (newCompany) {
+          const newLocaton = await this.prisma.locaton.create({
+            data: {
+              companyId: newCompany.id,
+              name: 'Default',
+            },
+          });
+          if (newLocaton) {
+            const userData = {
+              email: newUser.email,
+              username: newUser.username,
+              id: newUser.id,
+              company: newCompany,
+              location: newLocaton,
+            };
 
-    if (newCompany) {
-      const userData = {
-        email: newUser.email,
-        username: newUser.username,
-        id: newUser.id,
-        company: newCompany,
-      };
-      const tokens = await this.getTokens(newUser.id, newUser.email);
-      await this.updateRtHash(newUser.id, tokens.refresh_token);
-      return Object.assign({}, tokens, { user: userData });
+            return Object.assign({}, tokens, { user: userData });
+          }
+        }
+      }
+    } catch (error) {
+      if (error.code === 'P2002') {
+        throw new ForbiddenException('Credentials taken');
+      }
     }
   }
 
   async signinLocal(dto: AuthDto): Promise<any> {
-    console.log('signin', dto)
+    console.log('signin', dto);
+
     const user = await this.prisma.user.findUnique({
       where: {
         email: dto.email,

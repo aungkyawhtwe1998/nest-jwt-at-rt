@@ -26,15 +26,15 @@ export class CompanyController {
   @Patch('edit/:id')
   editCompanyById(
     @GetCurrentUserId() userId: number,
-    @Req() req: Request,
-    @Body() dto: EditCompanyDto,
-    @Body('serviceChargeRate', new ParseIntPipe()) serviceChargeRate: number,
-    @Body('taxRate', new ParseIntPipe()) taxRate: number,
     @Param('id', ParseIntPipe) companyId: number,
+    @Body() dto: EditCompanyDto,
+  
   ) {
-    console.log('company update ', companyId);
-    dto.serviceChargeRate = serviceChargeRate;
-    dto.taxRate = taxRate;
+    // @Body('serviceChargeRate', new ParseIntPipe()) serviceChargeRate: number,
+    // @Body('taxRate', new ParseIntPipe()) taxRate: number,
+    // console.log('company update ', companyId);
+    // dto.serviceChargeRate = serviceChargeRate;
+    // dto.taxRate = taxRate;
     return this.companyService.editCompanyById(userId, companyId, dto);
   }
 }

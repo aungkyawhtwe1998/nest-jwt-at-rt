@@ -25,20 +25,61 @@ model User {
 }
 
 model Company {
-  id                Int      @id @default(autoincrement())
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @default(now())
-  name              String   @default("Default")
-  address           String   @default("Default")
-  imageUrl          String   @default("")
-  serviceChargeRate Int      @default(0)
-  taxRate           Int      @default(0)
-  currency          String   @default("฿")
-  coverPhoto        String   @default("")
-  userId            Int      @unique
-  user              User     @relation(fields: [userId], references: [id])
+  id                Int       @id @default(autoincrement())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now())
+  name              String    @default("Default")
+  address           String    @default("Default")
+  imageUrl          String    @default("")
+  serviceChargeRate Int       @default(0)
+  taxRate           Int       @default(0)
+  currency          String    @default("฿")
+  coverPhoto        String    @default("")
+  userId            Int       @unique
+  user              User      @relation(fields: [userId], references: [id])
+  locations         Locaton[]
 
   @@map("companies")
+}
+
+model Locaton {
+  id             Int            @id @default(autoincrement())
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @default(now())
+  name           String         @default("Default")
+  companyId      Int
+  company        Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  menuCategories MenuCategory[]
+
+  @@map("locations")
+}
+
+model MenuCategory {
+  id         Int        @id @default(autoincrement())
+  name       String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @default(now())
+  sortIndex  Int        @default(0)
+  locationId Int
+  location   Locaton    @relation(fields: [locationId], references: [id])
+  menuItems  MenuItem[]
+
+  @@map("menuCategories")
+}
+
+model MenuItem {
+  id             Int          @id @default(autoincrement())
+  name           String
+  price          Int
+  discount       Int
+  imageUrl       String
+  createdAt      DateTime     @default(now())
+  description    String
+  updatedAt      DateTime     @default(now())
+  menuCategoryId Int
+  menuCategory   MenuCategory @relation(fields: [menuCategoryId], references: [id])
+
+  @@map("menuItems")
 }
 
 model Todo {

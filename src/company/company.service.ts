@@ -5,9 +5,9 @@ import { Injectable, ForbiddenException } from '@nestjs/common';
 @Injectable()
 export class CompanyService {
     constructor (private prisma: PrismaService){}
-
+    
     getCompany(userId: number){
-        return this.prisma.company.findMany({
+        return this.prisma.company.findFirst({
             where:
             {
                 userId
